@@ -3,11 +3,13 @@ package com.example.diceapp;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GestureDetectorCompat;
 
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.ContextMenu;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements RollLengthDialogF
 
 
 
+
+    private GestureDetectorCompat mDetector;
     private int mInitY;
     private int mInitX;
     private int mCurrentDie;
@@ -49,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements RollLengthDialogF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mDetector = new GestureDetectorCompat(this, new DiceGestureListener());
+
+
 
         // Create an array of Dice
         mDice = new Dice[MAX_DICE];
@@ -64,10 +71,10 @@ public class MainActivity extends AppCompatActivity implements RollLengthDialogF
         mDiceImageViews[1] = findViewById(R.id.dice2);
         mDiceImageViews[2] = findViewById(R.id.dice3);
 
-        for (int i = 0; i < mDiceImageViews.length; i++) {
-            registerForContextMenu(mDiceImageViews[i]);
-            mDiceImageViews[i].setTag(i);
-        }
+        //for (int i = 0; i < mDiceImageViews.length; i++) {
+        //    registerForContextMenu(mDiceImageViews[i]);
+        //    mDiceImageViews[i].setTag(i);
+        //}
 
         // All dice are initially visible
         mVisibleDice = MAX_DICE;
@@ -84,31 +91,7 @@ public class MainActivity extends AppCompatActivity implements RollLengthDialogF
         });
 
         // Moving finger left or right changes dice number
-        mDiceImageViews[0].setOnTouchListener((v, event) -> {
-            int action = event.getAction();
-            switch (action) {
-                case MotionEvent.ACTION_DOWN:
-                    mInitX = (int) event.getX();
-                    return true;
-                case MotionEvent.ACTION_MOVE:
-                    int x = (int) event.getX();
 
-                    // See if movement is at least 20 pixels
-                    if (Math.abs(x - mInitX) >= 20) {
-                        if (x > mInitX) {
-                            mDice[0].addOne();
-                        }
-                        else {
-                            mDice[0].subtractOne();
-                        }
-                        showDice();
-                        mInitX = x;
-                    }
-
-                    return true;
-            }
-            return false;
-        });
         mDiceImageViews[1].setOnTouchListener((v , event)-> {
             int action = event.getAction();
             switch (action){
@@ -147,6 +130,27 @@ public class MainActivity extends AppCompatActivity implements RollLengthDialogF
 
 
     }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        mDetector.onTouchEvent(event);
+        return super.onTouchEvent(event);
+    }
+
+    private class DiceGestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onDown(MotionEvent event) {
+            return true;
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            rollDice();
+            return true;
+        }
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
